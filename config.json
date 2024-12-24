@@ -1,0 +1,41 @@
+{
+    "general": {
+        "population_number": 100, 
+        "fitness_objective": 1000
+    },
+
+    "inputs_&_outputs": {
+        "inputs_number": 4,
+        "outputs_number": 2,
+        "max_bias": 20,
+        "min_bias": -20,
+        "max_weight": 5,
+        "min_weight": -5
+    },
+
+    "mutation_probabilities": {
+        "modify_weight": 0.01,
+        "modify_bias": 0.001,
+        "add_node": 0.01,
+        "remove_node": 0.00001,
+        "add_connection": 0.0001,
+        "remove_connection": 0.00005,
+        "add_layer": 0.000001,
+        "remove_layer": 0.0000001
+    },
+
+    "storage_info": {
+        "interval": 20,
+        "storage_selection": ["best", "worst"],
+        "winner_storage": true,
+        "file_prefix": "Saves/"
+    },
+
+    "replays_info": {
+        "interval": 50,
+        "replay_selection": ["all"],
+        "winner_replay": true
+    }
+    
+
+}

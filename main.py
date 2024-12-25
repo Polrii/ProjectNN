@@ -39,8 +39,11 @@ def calculate_outputs(inputs, neural_network):
         connections = []
         for connection in neural_network["connections"]:
             if connection["to"] == [layer, position]:
-                connections.append(connection["weight"]*sum(find_connections(),))
-                # Should multiply the weight by the sum of all connections and the bias of the previous node
+                if connection["from"][0] == "input_layer":
+                    connections.append(connection["weight"] * inputs[connection["from"][1]])
+                else:
+                    connections.append(connection["weight"] * sum(find_connections(connection["from"][0], connection["from"][1]), neural_network["nodes"][connection["from"][0]][connection["from"][1]]))
+        return connections
     
     # Starts the recursion function for each output neuron
     for x, output_neuron in enumerate(neural_network["nodes"]["output_layer"]):

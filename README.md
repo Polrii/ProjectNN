@@ -3,7 +3,8 @@
 
 
 
-Neural Networks list format (neural_networks):
+### Neural Networks list format (neural_networks):
+```
 [                                                               # List with a dictionary for each neural network
     {                                                           # Dictionary for the first neural network
         'nodes':{                                               # A dictionary with the nodes on that nn
@@ -22,3 +23,4 @@ Neural Networks list format (neural_networks):
     },
     {...}, ...
 ]
+```

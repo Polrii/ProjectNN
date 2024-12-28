@@ -1,10 +1,13 @@
 import json
 import random
 import os
+import time
 import ExampleGame
 
 
 neural_networks = []
+start_time = time.time()
+last_log_time = start_time
 
 def populate(config_parameters):
     for i in range(config_parameters["general"]["population_number"]):
@@ -54,22 +57,69 @@ def calculate_outputs(inputs, neural_network):
     
 
 
+# Saves the Neural Network in a json file if the current iteration is in the saving interval
+def saveNN(current_iteration, config_parameters, fitnesses):
+    
+    if current_iteration % config_parameters["storage_info"]["interval"] == 0:
+        prefix = os.path.join(os.getcwd(), config_parameters["storage_info"]["file_prefix"])
+        
+        
+        if "all" in config_parameters["storage_info"]["storage_selection"]:
+            for x, neural_network in enumerate(neural_networks):
+                with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
+                    json.dump(neural_network, file, indent=4)
+        else: 
+            if "best" in config_parameters["storage_info"]["storage_selection"]:
+                with open(f"{prefix}{current_iteration}_best.json", "w") as file:
+                    json.dump(neural_networks[fitnesses.index(max(fitnesses))], file, indent=4)
+            if "worst" in config_parameters["storage_info"]["storage_selection"]:
+                with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
+                    json.dump(neural_networks[fitnesses.index(min(fitnesses))], file, indent=4)
+    
 
-def saveNN(neural_network, name, config_parameters):
-    with open(name, "w") as file:
-        json.dump(neural_network, file, indent=4)
 
-def save_replay():
-    pass
+# Checks if we are in the saving interval and saves the desired Neurla Networks
+# At the moment it saves the nns, but it should save the outputs, and randoms of the game to do replays
+def save_replay(current_iteration, config_parameters, fitnesses):
+    if current_iteration % config_parameters["replays_info"]["interval"] == 0:
+        prefix = os.path.join(os.getcwd(), config_parameters["replays_info"]["file_prefix"])
+        
+        if "all" in config_parameters["replays_info"]["replay_selection"]:
+            for x, neural_network in enumerate(neural_networks):
+                with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
+                    json.dump(neural_network, file, indent=4)
+        else: 
+            if "best" in config_parameters["replays_info"]["replay_selection"]:
+                with open(f"{prefix}{current_iteration}_best.json", "w") as file:
+                    json.dump(neural_networks[fitnesses.index(max(fitnesses))], file, indent=4)
+                    
+            if "worst" in config_parameters["replays_info"]["replay_selection"]:
+                with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
+                    json.dump(neural_networks[fitnesses.index(min(fitnesses))], file, indent=4)
 
+
+def log():
+    global last_log_time
+    current_time = time.time()
+    total_runtime = current_time - start_time
+    time_since_last_log = current_time - last_log_time
+    last_log_time = current_time
+
+    total_runtime_h = int(total_runtime // 3600)
+    total_runtime_min = int((total_runtime % 3600) // 60)
+    total_runtime_s = int(total_runtime % 60)
+
+    time_since_last_log_h = int(time_since_last_log // 3600)
+    time_since_last_log_min = int((time_since_last_log % 3600) // 60)
+    time_since_last_log_s = int(time_since_last_log % 60)
+
+    print(f"Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s")
+    print(f"Time since last log: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
 
 
 def breed():
     pass
 
-
-def log():
-    pass
 
 
 
@@ -77,31 +127,24 @@ def train(config_parameters):
     current_iteration = 1
     while True:
 
-        #play
-        #savenn
-        #log
-        #breed
+        #play           --> Done
+        #savenn         --> Done
+        #savereplay     --> In Progress
+        #log            --> To Do
+        #breed          --> To Do
+        
+        # Calculate the fitness of each neural network
         fitnesses = []
         for neural_network in neural_networks:
             calculate_outputs([00000], neural_network)
         
         
+        # Save the Neural Networks and Replays if it's hitting the saving interval
+        saveNN(current_iteration, config_parameters, fitnesses)
+        save_replay(current_iteration, config_parameters, fitnesses)
         
-        if current_iteration % config_parameters["storage_info"]["interval"] == 0:
-            prefix = os.path.join(os.getcwd(), config_parameters["storage_info"]["file_prefix"])
-            
-            
-            if "all" in config_parameters["storage_info"]["storage_selection"]:
-                for x, neural_network in enumerate(neural_networks):
-                    saveNN(neural_network, f"{prefix}_{current_iteration}_{x}.json", config_parameters)
-            else: 
-                if "best" in config_parameters["storage_info"]["storage_selection"]:
-                    saveNN(neural_networks[fitnesses.index(max(fitnesses))], f"{prefix}_{current_iteration}_best.json", config_parameters)
-                if "worst" in config_parameters["storage_info"]["storage_selection"]:
-                    saveNN(neural_networks[fitnesses.index(min(fitnesses))], f"{prefix}_{current_iteration}_worst.json", config_parameters)
-        
-        
-        
+        # Print the log and store it in a file
+        log()
         
         
         current_iteration += 1
@@ -119,7 +162,7 @@ def run():
     
     print(neural_networks)
     
-    train()
+    train(config_parameters)
 
 
 run()

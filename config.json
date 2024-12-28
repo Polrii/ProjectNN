@@ -34,7 +34,8 @@
     "replays_info": {
         "interval": 50,
         "replay_selection": ["all"],
-        "winner_replay": true
+        "winner_replay": true,
+        "file_prefix": "Replays/"
     }
     
 

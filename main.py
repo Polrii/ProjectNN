@@ -117,8 +117,44 @@ def log():
     print(f"Time since last log: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
 
 
-def breed():
-    pass
+def breed(fitnesses, config_parameters):
+    # Define a new list for the Neural Networks
+    new_neural_networks = []
+    population_number = config_parameters["general"]["population_number"]
+    # Sort the Neural Networks by their fitness
+    for x, neural_network in enumerate(neural_networks):
+        neural_network["fitness"] = fitnesses[x]
+    neural_networks.sort(key=lambda x: x["fitness"], reverse=True)
+    
+    # Save the two best Neural Networks
+    new_neural_networks.append(neural_networks[0])
+    new_neural_networks.append(neural_networks[1])
+    
+    
+    # Load config parameters for faster access
+    max_bias = config_parameters["inputs_&_outputs"]["max_bias"]
+    min_bias = config_parameters["inputs_&_outputs"]["min_bias"]
+    max_weight = config_parameters["inputs_&_outputs"]["max_weight"]
+    min_weight = config_parameters["inputs_&_outputs"]["min_weight"]
+    
+    modify_weight = config_parameters["mutation_probabilities"]["modify_weight"]
+    modify_bias = config_parameters["mutation_probabilities"]["modify_bias"]
+    add_node = config_parameters["mutation_probabilities"]["add_node"]
+    remove_node = config_parameters["mutation_probabilities"]["remove_node"]
+    add_connection = config_parameters["mutation_probabilities"]["add_connection"]
+    remove_connection = config_parameters["mutation_probabilities"]["remove_connection"]
+    add_layer = config_parameters["mutation_probabilities"]["add_layer"]
+    remove_layer = config_parameters["mutation_probabilities"]["remove_layer"]
+    
+    
+    # Create random variations of other Neural Networks
+    while len(new_neural_networks) < population_number:
+        # Select a random Neural Network
+        neural_network = random.choice(neural_networks)
+        for connection in neural_network["connections"]:
+            pass
+        
+        
 
 
 
@@ -130,8 +166,8 @@ def train(config_parameters):
         #play           --> Done
         #savenn         --> Done
         #savereplay     --> In Progress
-        #log            --> To Do
-        #breed          --> To Do
+        #log            --> In Progress
+        #breed          --> In Progress
         
         # Calculate the fitness of each neural network
         fitnesses = []
@@ -145,6 +181,9 @@ def train(config_parameters):
         
         # Print the log and store it in a file
         log()
+        
+        # Breed the Neural Networks
+        breed(fitnesses, config_parameters)
         
         
         current_iteration += 1

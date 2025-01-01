@@ -1,7 +1,7 @@
 {
     "general": {
         "population_number": 100, 
-        "fitness_objective": 1000
+        "fitness_objective": 1000000000000
     },
 
     "inputs_&_outputs": {
@@ -33,7 +33,7 @@
 
     "replays_info": {
         "interval": 50,
-        "replay_selection": ["all"],
+        "replay_selection": ["best"],
         "winner_replay": true,
         "file_prefix": "Replays/"
     }

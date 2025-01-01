@@ -76,10 +76,10 @@ def saveNN(current_iteration, config_parameters, fitnesses):
         else: 
             if "best" in config_parameters["storage_info"]["storage_selection"]:
                 with open(f"{prefix}{current_iteration}_best.json", "w") as file:
-                    json.dump(neural_networks[fitnesses.index(max(fitnesses))], file, indent=4)
+                    json.dump(neural_networks[0], file, indent=4)
             if "worst" in config_parameters["storage_info"]["storage_selection"]:
                 with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
-                    json.dump(neural_networks[fitnesses.index(min(fitnesses))], file, indent=4)
+                    json.dump(neural_networks[-1], file, indent=4)
     
 
 
@@ -96,11 +96,11 @@ def save_replay(current_iteration, config_parameters, fitnesses):
         else: 
             if "best" in config_parameters["replays_info"]["replay_selection"]:
                 with open(f"{prefix}{current_iteration}_best.json", "w") as file:
-                    json.dump(neural_networks[fitnesses.index(max(fitnesses))], file, indent=4)
+                    json.dump(neural_networks[0], file, indent=4)
                     
             if "worst" in config_parameters["replays_info"]["replay_selection"]:
                 with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
-                    json.dump(neural_networks[fitnesses.index(min(fitnesses))], file, indent=4)
+                    json.dump(neural_networks[-1], file, indent=4)
 
 
 def log(current_iteration):
@@ -146,13 +146,14 @@ def log(current_iteration):
     print(f"Fitness:")
     print(f"       |    Actual    Increase")
     print(f"------------------------------")
-    print(f"Best   |{best_fitness:<10.2f}  {best_increase:<10.2f}")
-    print(f"Average|{average_fitness:<10.2f}  {average_increase:<10.2f}")
-    print(f"Worst  |{worst_fitness:<10.2f}  {worst_increase:<10.2f}")
+    print(f"Best   |{best_fitness:>10.2f}  {best_increase:>10.2f}")
+    print(f"Average|{average_fitness:>10.2f}  {average_increase:>10.2f}")
+    print(f"Worst  |{worst_fitness:>10.2f}  {worst_increase:>10.2f}")
     print(f"Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s")
 
 
 def breed(fitnesses, config_parameters):
+    global neural_networks
     # Define a new list for the Neural Networks
     new_neural_networks = []
     population_number = config_parameters["general"]["population_number"]
@@ -186,7 +187,7 @@ def breed(fitnesses, config_parameters):
         # Create a new Neural Network with the same input layer and probability randomized output layer
         new_neural_network = {
             "nodes": {
-                "input_layer": [neural_network["nodes"]["input_layer"]],
+                "input_layer": neural_network["nodes"]["input_layer"],
                 "output_layer": [random.uniform(min_bias, max_bias) if random.random() < modify_bias else output_node for output_node in neural_network["nodes"]["output_layer"]]
             },
             "connections": []
@@ -325,6 +326,9 @@ def breed(fitnesses, config_parameters):
 
         # Add the newly created Neural Network to the list
         new_neural_networks.append(new_neural_network)
+    
+    # Replace the old Neural Networks with the new ones
+    neural_networks = new_neural_networks
         
         
 
@@ -349,11 +353,11 @@ def train(config_parameters):
             outputs = calculate_outputs([0, 0], neural_network)
             fitness += 1 / (outputs[0] - 1)**2
             outputs = calculate_outputs([0, 1], neural_network)
-            fitness += 1 / (outputs[0] - 0)**2
+            fitness *= 1 / (outputs[0] - 0)**2
             outputs = calculate_outputs([1, 0], neural_network)
-            fitness += 1 / (outputs[0] - 0)**2
+            fitness *= 1 / (outputs[0] - 0)**2
             outputs = calculate_outputs([1, 1], neural_network)
-            fitness += 1 / (outputs[0] - 1)**2
+            fitness *= 1 / (outputs[0] - 1)**2
             
             fitnesses.append(fitness)
             
@@ -369,6 +373,11 @@ def train(config_parameters):
         
         # Print the log and store it in a file
         log(current_iteration)
+        
+        # Stop the program if the fitness objective is achieved
+        if neural_networks[0]["fitness"] >= config_parameters["general"]["fitness_objective"]:
+            print("Fitness objective achieved")
+            break
         
         # Breed the Neural Networks
         breed(fitnesses, config_parameters)

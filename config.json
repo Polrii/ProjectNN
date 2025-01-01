@@ -1,7 +1,7 @@
 {
     "general": {
         "population_number": 1000, 
-        "fitness_objective": 1000000000000
+        "fitness_objective": 4
     },
 
     "inputs_&_outputs": {

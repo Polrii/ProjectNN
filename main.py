@@ -2,7 +2,7 @@ import json
 import random
 import os
 import time
-import ExampleGame
+import copy
 
 
 neural_networks = []
@@ -152,7 +152,7 @@ def log(current_iteration):
     
     # Print the log
     print(f"\n\nGeneration: {current_iteration}")
-    print(f"="*20)
+    print(f"==================================================")
     print(f"Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
     print(f"Fitness:")
     print(f"       |              Actual              Increase")
@@ -339,7 +339,7 @@ def breed(fitnesses, config_parameters):
         new_neural_networks.append(new_neural_network)
     
     # Replace the old Neural Networks with the new ones
-    neural_networks = new_neural_networks
+    neural_networks = copy.deepcopy(new_neural_networks)
         
         
 
@@ -362,19 +362,22 @@ def train(config_parameters):
             # Example of AND gate
             fitness = 0
             outputs = calculate_outputs([0, 0], neural_network)
-            fitness += 1 / (outputs[0] - 1)**2
+            if 0.9 < outputs[0] < 1.1:
+                fitness += 1
             outputs = calculate_outputs([0, 1], neural_network)
-            fitness *= 1 / (outputs[0] - 0)**2
+            if -0.1 < outputs[0] < 0.1:
+                fitness += 1
             outputs = calculate_outputs([1, 0], neural_network)
-            fitness *= 1 / (outputs[0] - 0)**2
+            if -0.1 < outputs[0] < 0.1:
+                fitness += 1
             outputs = calculate_outputs([1, 1], neural_network)
-            fitness *= 1 / (outputs[0] - 1)**2
+            if 0.9 < outputs[0] < 1.1:
+                fitness += 1
             
-            fitnesses.append(fitness)
+            # Apply the fitness
+            neural_network["fitness"] = fitness
             
         # Sort the Neural Networks by their fitness
-        for x, neural_network in enumerate(neural_networks):
-            neural_network["fitness"] = fitnesses[x]
         neural_networks.sort(key=lambda x: x["fitness"], reverse=True)
         
         

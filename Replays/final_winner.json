@@ -1,0 +1,80 @@
+{
+    "nodes": {
+        "input_layer": [
+            0,
+            0
+        ],
+        "output_layer": [
+            0.991882355623023
+        ]
+    },
+    "connections": [
+        {
+            "from": [
+                "input_layer",
+                0
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": 0.6142456319981173
+        },
+        {
+            "from": [
+                "input_layer",
+                1
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": 0.7660607576722933
+        },
+        {
+            "from": [
+                "input_layer",
+                0
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": -1.50654872905133
+        },
+        {
+            "from": [
+                "input_layer",
+                1
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": -1.6781630116522495
+        },
+        {
+            "from": [
+                "input_layer",
+                0
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": -0.10198742963903129
+        },
+        {
+            "from": [
+                "input_layer",
+                1
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": 1.9015731760628771
+        }
+    ],
+    "fitness": 3982516457701.065
+}

@@ -63,44 +63,55 @@ def calculate_outputs(inputs, neural_network):
 
 
 # Saves the Neural Network in a json file if the current iteration is in the saving interval
-def saveNN(current_iteration, config_parameters, fitnesses):
-    
-    if current_iteration % config_parameters["storage_info"]["interval"] == 0:
+def saveNN(current_iteration, config_parameters, finished=False):
+    if finished:
         prefix = os.path.join(os.getcwd(), config_parameters["storage_info"]["file_prefix"])
-        
-        
-        if "all" in config_parameters["storage_info"]["storage_selection"]:
-            for x, neural_network in enumerate(neural_networks):
-                with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
-                    json.dump(neural_network, file, indent=4)
-        else: 
-            if "best" in config_parameters["storage_info"]["storage_selection"]:
-                with open(f"{prefix}{current_iteration}_best.json", "w") as file:
-                    json.dump(neural_networks[0], file, indent=4)
-            if "worst" in config_parameters["storage_info"]["storage_selection"]:
-                with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
-                    json.dump(neural_networks[-1], file, indent=4)
+        with open(f"{prefix}final_winner.json", "w") as file:
+            json.dump(neural_networks[0], file, indent=4)
+    
+    else:
+        if current_iteration % config_parameters["storage_info"]["interval"] == 0:
+            prefix = os.path.join(os.getcwd(), config_parameters["storage_info"]["file_prefix"])
+            
+            
+            if "all" in config_parameters["storage_info"]["storage_selection"]:
+                for x, neural_network in enumerate(neural_networks):
+                    with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
+                        json.dump(neural_network, file, indent=4)
+            else: 
+                if "best" in config_parameters["storage_info"]["storage_selection"]:
+                    with open(f"{prefix}{current_iteration}_best.json", "w") as file:
+                        json.dump(neural_networks[0], file, indent=4)
+                if "worst" in config_parameters["storage_info"]["storage_selection"]:
+                    with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
+                        json.dump(neural_networks[-1], file, indent=4)
     
 
 
 # Checks if we are in the saving interval and saves the desired Neurla Networks
 # At the moment it saves the nns, but it should save the outputs, and randoms of the game to do replays
-def save_replay(current_iteration, config_parameters, fitnesses):
-    if current_iteration % config_parameters["replays_info"]["interval"] == 0:
-        prefix = os.path.join(os.getcwd(), config_parameters["replays_info"]["file_prefix"])
-        
-        if "all" in config_parameters["replays_info"]["replay_selection"]:
-            for x, neural_network in enumerate(neural_networks):
-                with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
-                    json.dump(neural_network, file, indent=4)
-        else: 
-            if "best" in config_parameters["replays_info"]["replay_selection"]:
-                with open(f"{prefix}{current_iteration}_best.json", "w") as file:
-                    json.dump(neural_networks[0], file, indent=4)
-                    
-            if "worst" in config_parameters["replays_info"]["replay_selection"]:
-                with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
-                    json.dump(neural_networks[-1], file, indent=4)
+def save_replay(current_iteration, config_parameters, finished=False):
+    if finished:
+        prefix = os.path.join(os.getcwd(), config_parameters["storage_info"]["file_prefix"])
+        with open(f"{prefix}final_winner.json", "w") as file:
+            json.dump(neural_networks[0], file, indent=4)
+    
+    else:
+        if current_iteration % config_parameters["replays_info"]["interval"] == 0:
+            prefix = os.path.join(os.getcwd(), config_parameters["replays_info"]["file_prefix"])
+            
+            if "all" in config_parameters["replays_info"]["replay_selection"]:
+                for x, neural_network in enumerate(neural_networks):
+                    with open(f"{prefix}{current_iteration}_{x}.json", "w") as file:
+                        json.dump(neural_network, file, indent=4)
+            else: 
+                if "best" in config_parameters["replays_info"]["replay_selection"]:
+                    with open(f"{prefix}{current_iteration}_best.json", "w") as file:
+                        json.dump(neural_networks[0], file, indent=4)
+                        
+                if "worst" in config_parameters["replays_info"]["replay_selection"]:
+                    with open(f"{prefix}{current_iteration}_worst.json", "w") as file:
+                        json.dump(neural_networks[-1], file, indent=4)
 
 
 def log(current_iteration):
@@ -144,11 +155,11 @@ def log(current_iteration):
     print(f"="*20)
     print(f"Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
     print(f"Fitness:")
-    print(f"       |    Actual    Increase")
-    print(f"------------------------------")
-    print(f"Best   |{best_fitness:>10.2f}  {best_increase:>10.2f}")
-    print(f"Average|{average_fitness:>10.2f}  {average_increase:>10.2f}")
-    print(f"Worst  |{worst_fitness:>10.2f}  {worst_increase:>10.2f}")
+    print(f"       |              Actual              Increase")
+    print(f"--------------------------------------------------")
+    print(f"Best   |{best_fitness:>20.2f}  {best_increase:>20.2f}")
+    print(f"Average|{average_fitness:>20.2f}  {average_increase:>20.2f}")
+    print(f"Worst  |{worst_fitness:>20.2f}  {worst_increase:>20.2f}")
     print(f"Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s")
 
 
@@ -368,8 +379,8 @@ def train(config_parameters):
         
         
         # Save the Neural Networks and Replays if it's hitting the saving interval
-        saveNN(current_iteration, config_parameters, fitnesses)
-        save_replay(current_iteration, config_parameters, fitnesses)
+        saveNN(current_iteration, config_parameters)
+        save_replay(current_iteration, config_parameters)
         
         # Print the log and store it in a file
         log(current_iteration)
@@ -377,6 +388,8 @@ def train(config_parameters):
         # Stop the program if the fitness objective is achieved
         if neural_networks[0]["fitness"] >= config_parameters["general"]["fitness_objective"]:
             print("Fitness objective achieved")
+            saveNN(current_iteration, config_parameters, finished=True)
+            save_replay(current_iteration, config_parameters, finished=True)
             break
         
         # Breed the Neural Networks

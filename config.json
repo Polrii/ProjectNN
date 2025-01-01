@@ -1,6 +1,6 @@
 {
     "general": {
-        "population_number": 100, 
+        "population_number": 1000, 
         "fitness_objective": 1000000000000
     },
 
@@ -25,14 +25,14 @@
     },
 
     "storage_info": {
-        "interval": 20,
+        "interval": 100,
         "storage_selection": ["best", "worst"],
         "winner_storage": true,
         "file_prefix": "Saves/"
     },
 
     "replays_info": {
-        "interval": 50,
+        "interval": 10000,
         "replay_selection": ["best"],
         "winner_replay": true,
         "file_prefix": "Replays/"

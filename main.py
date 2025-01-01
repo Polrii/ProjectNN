@@ -9,6 +9,11 @@ neural_networks = []
 start_time = time.time()
 last_log_time = start_time
 
+last_best_fitness = 0
+last_average_fitness = 0
+last_worst_fitness = 0
+
+
 def populate(config_parameters):
     for i in range(config_parameters["general"]["population_number"]):
         neural_network = {
@@ -98,33 +103,59 @@ def save_replay(current_iteration, config_parameters, fitnesses):
                     json.dump(neural_networks[fitnesses.index(min(fitnesses))], file, indent=4)
 
 
-def log():
+def log(current_iteration):
+    # Load last fitnesses
+    global last_best_fitness
+    global last_average_fitness
+    global last_worst_fitness
+    
+    # Calculate the time since the last log and the total runtime
     global last_log_time
     current_time = time.time()
     total_runtime = current_time - start_time
     time_since_last_log = current_time - last_log_time
     last_log_time = current_time
 
+    # Foramt the total runtime
     total_runtime_h = int(total_runtime // 3600)
     total_runtime_min = int((total_runtime % 3600) // 60)
     total_runtime_s = int(total_runtime % 60)
 
+    # Format the time since the last log
     time_since_last_log_h = int(time_since_last_log // 3600)
     time_since_last_log_min = int((time_since_last_log % 3600) // 60)
     time_since_last_log_s = int(time_since_last_log % 60)
 
+    best_fitness = max([neural_network["fitness"] for neural_network in neural_networks])
+    average_fitness = sum([neural_network["fitness"] for neural_network in neural_networks]) / len(neural_networks)
+    worst_fitness = min([neural_network["fitness"] for neural_network in neural_networks])
+    
+    best_increase = best_fitness - last_best_fitness
+    average_increase = average_fitness - last_average_fitness
+    worst_increase = worst_fitness - last_worst_fitness
+    
+    last_best_fitness = best_fitness
+    last_average_fitness = average_fitness
+    last_worst_fitness = worst_fitness
+    
+    
+    # Print the log
+    print(f"\n\nGeneration: {current_iteration}")
+    print(f"="*20)
+    print(f"Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
+    print(f"Fitness:")
+    print(f"       |    Actual    Increase")
+    print(f"------------------------------")
+    print(f"Best   |{best_fitness:<10.2f}  {best_increase:<10.2f}")
+    print(f"Average|{average_fitness:<10.2f}  {average_increase:<10.2f}")
+    print(f"Worst  |{worst_fitness:<10.2f}  {worst_increase:<10.2f}")
     print(f"Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s")
-    print(f"Time since last log: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
 
 
 def breed(fitnesses, config_parameters):
     # Define a new list for the Neural Networks
     new_neural_networks = []
     population_number = config_parameters["general"]["population_number"]
-    # Sort the Neural Networks by their fitness
-    for x, neural_network in enumerate(neural_networks):
-        neural_network["fitness"] = fitnesses[x]
-    neural_networks.sort(key=lambda x: x["fitness"], reverse=True)
     
     # Save the two best Neural Networks
     new_neural_networks.append(neural_networks[0])
@@ -301,19 +332,35 @@ def breed(fitnesses, config_parameters):
 
 
 def train(config_parameters):
-    current_iteration = 1
+    current_iteration = 0
     while True:
 
         #play           --> Done
         #savenn         --> Done
         #savereplay     --> In Progress
-        #log            --> In Progress
-        #breed          --> In Progress
+        #log            --> Done
+        #breed          --> Done
         
         # Calculate the fitness of each neural network
         fitnesses = []
         for neural_network in neural_networks:
-            calculate_outputs([00000], neural_network)
+            # Example of AND gate
+            fitness = 0
+            outputs = calculate_outputs([0, 0], neural_network)
+            fitness += 1 / (outputs[0] - 1)**2
+            outputs = calculate_outputs([0, 1], neural_network)
+            fitness += 1 / (outputs[0] - 0)**2
+            outputs = calculate_outputs([1, 0], neural_network)
+            fitness += 1 / (outputs[0] - 0)**2
+            outputs = calculate_outputs([1, 1], neural_network)
+            fitness += 1 / (outputs[0] - 1)**2
+            
+            fitnesses.append(fitness)
+            
+        # Sort the Neural Networks by their fitness
+        for x, neural_network in enumerate(neural_networks):
+            neural_network["fitness"] = fitnesses[x]
+        neural_networks.sort(key=lambda x: x["fitness"], reverse=True)
         
         
         # Save the Neural Networks and Replays if it's hitting the saving interval
@@ -321,7 +368,7 @@ def train(config_parameters):
         save_replay(current_iteration, config_parameters, fitnesses)
         
         # Print the log and store it in a file
-        log()
+        log(current_iteration)
         
         # Breed the Neural Networks
         breed(fitnesses, config_parameters)

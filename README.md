@@ -24,3 +24,21 @@
     {...}, ...
 ]
 ```
+
+
+### Mutation probabilities references:
+- Per connection:
+  - Modify weight
+  - Remove connection
+  
+- Per node:
+  - Modify bias
+  - Remove node
+  - Add connection
+
+- Per layer:
+  - Add node
+  - Remove layer
+
+- Per NN:
+  - Add layer

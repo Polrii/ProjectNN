@@ -1,0 +1,36 @@
+{
+    "nodes": {
+        "input_layer": [
+            0,
+            0
+        ],
+        "output_layer": [
+            -0.7816937992558479
+        ]
+    },
+    "connections": [
+        {
+            "from": [
+                "input_layer",
+                0
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": 0.9680741591023923
+        },
+        {
+            "from": [
+                "input_layer",
+                1
+            ],
+            "to": [
+                "output_layer",
+                0
+            ],
+            "weight": 0.7224595741359803
+        }
+    ],
+    "fitness": 2
+}

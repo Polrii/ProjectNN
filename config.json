@@ -5,8 +5,8 @@
     },
 
     "inputs_&_outputs": {
-        "inputs_number": 4,
-        "outputs_number": 2,
+        "inputs_number": 2,
+        "outputs_number": 1,
         "max_bias": 20,
         "min_bias": -20,
         "max_weight": 5,

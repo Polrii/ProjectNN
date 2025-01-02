@@ -50,7 +50,13 @@ def calculate_outputs(inputs, neural_network):
                 if connection["from"][0] == "input_layer":
                     connections.append(connection["weight"] * inputs[connection["from"][1]])
                 else:
-                    connections.append(connection["weight"] * sum(find_connections(connection["from"][0], connection["from"][1]), neural_network["nodes"][connection["from"][0]][connection["from"][1]]))
+                    try:
+                        connections.append(connection["weight"] * sum(find_connections(connection["from"][0], connection["from"][1]), neural_network["nodes"][connection["from"][0]][connection["from"][1]]))
+                    except IndexError:
+                        print("Index Error line 54 approx")
+                        print(neural_network)
+                        print(connection)
+                        quit()
         return connections
     
     # Starts the recursion function for each output neuron
@@ -170,8 +176,8 @@ def breed(fitnesses, config_parameters):
     population_number = config_parameters["general"]["population_number"]
     
     # Save the two best Neural Networks
-    new_neural_networks.append(neural_networks[0])
-    new_neural_networks.append(neural_networks[1])
+    new_neural_networks.append(copy.deepcopy(neural_networks[0]))
+    new_neural_networks.append(copy.deepcopy(neural_networks[1]))
     
     
     # Load config parameters for faster access
@@ -295,8 +301,10 @@ def breed(fitnesses, config_parameters):
             # Other layers -> add connection, modify bias, remove nodes
             else:
                 for x, node in enumerate(new_neural_network["nodes"][layer]):
+                    x_counter = 0
                     # Remove node
                     if random.random() < remove_node:
+                        x_counter += 1
                         del new_neural_network["nodes"][layer][x]
                         
                         # Remove connections to that node and modify the references
@@ -304,8 +312,14 @@ def breed(fitnesses, config_parameters):
                             if connection["from"] == [layer, x] or connection["to"] == [layer, x]:
                                 del new_neural_network["connections"][y]
                             elif connection["from"][0] == layer:
-                                if connection["from"][1] > x:
-                                    connection["from"][1] -= 1
+                                try:
+                                    if connection["from"][1] > x:
+                                        connection["from"][1] -= 1
+                                except TypeError:
+                                    print("Type Error line 307 approx")
+                                    print(new_neural_network)
+                                    quit()
+                                    
                             elif connection["to"][0] == layer:
                                 if connection["to"][1] > x:
                                     connection["to"][1] -= 1
@@ -320,12 +334,12 @@ def breed(fitnesses, config_parameters):
                             
                             # Get a random layer and node number
                             random_layer = random.choice(layers_list)
-                            random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
+                            random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1-x_counter)
                             
                             # Create and add the new connection
                             new_connection = {
-                                "from": [layer, x if layer < random_layer else random_layer, random_node],
-                                "to": [layer, x if layer > random_layer else random_layer, random_node],
+                                "from": [layer, x] if layer < random_layer else [random_layer, random_node],
+                                "to": [layer, x] if layer > random_layer else [random_layer, random_node],
                                 "weight": random.uniform(min_weight, max_weight)
                             }
                             new_neural_network["connections"].append(new_connection)

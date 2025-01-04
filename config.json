@@ -1,6 +1,6 @@
 {
     "general": {
-        "population_number": 1000, 
+        "population_number": 10000, 
         "fitness_objective": 4
     },
 

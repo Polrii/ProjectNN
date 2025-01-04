@@ -156,17 +156,25 @@ def log(current_iteration):
     last_worst_fitness = worst_fitness
     
     
-    # Print the log
-    print(f"\n\nGeneration: {current_iteration}")
-    print(f"==================================================")
-    print(f"Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s")
-    print(f"Fitness:")
-    print(f"       |              Actual              Increase")
-    print(f"--------------------------------------------------")
-    print(f"Best   |{best_fitness:>20.2f}  {best_increase:>20.2f}")
-    print(f"Average|{average_fitness:>20.2f}  {average_increase:>20.2f}")
-    print(f"Worst  |{worst_fitness:>20.2f}  {worst_increase:>20.2f}")
-    print(f"Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s")
+    # Print the log 
+    print(f"""
+    \n\nGeneration: {current_iteration}
+    ==================================================
+    Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s
+    Fitness:
+           |              Actual              Increase
+    --------------------------------------------------
+    Best   |{best_fitness:>20.2f}  {best_increase:>20.2f}
+    Average|{average_fitness:>20.2f}  {average_increase:>20.2f}
+    Worst  |{worst_fitness:>20.2f}  {worst_increase:>20.2f}
+    Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s
+    """)
+
+    
+    # Stop if we loose best average (just for tests)
+    if best_increase < 0:
+        print("Best average decreased")
+        quit()
 
 
 def breed(fitnesses, config_parameters):
@@ -176,8 +184,8 @@ def breed(fitnesses, config_parameters):
     population_number = config_parameters["general"]["population_number"]
     
     # Save the two best Neural Networks
-    new_neural_networks.append(copy.deepcopy(neural_networks[0]))
-    new_neural_networks.append(copy.deepcopy(neural_networks[1]))
+    new_neural_networks.append(neural_networks[0])
+    new_neural_networks.append(neural_networks[1])
     
     
     # Load config parameters for faster access
@@ -200,7 +208,7 @@ def breed(fitnesses, config_parameters):
     while len(new_neural_networks) < population_number:
         
         # Select a random Neural Network
-        neural_network = random.choice(neural_networks)
+        neural_network = copy.deepcopy(random.choice(neural_networks))
         # Create a new Neural Network with the same input layer and probability randomized output layer
         new_neural_network = {
             "nodes": {
@@ -301,24 +309,18 @@ def breed(fitnesses, config_parameters):
             # Other layers -> add connection, modify bias, remove nodes
             else:
                 for x, node in enumerate(new_neural_network["nodes"][layer]):
-                    x_counter = 0
                     # Remove node
                     if random.random() < remove_node:
-                        x_counter += 1
                         del new_neural_network["nodes"][layer][x]
                         
                         # Remove connections to that node and modify the references
                         for y, connection in enumerate(new_neural_network["connections"]):
                             if connection["from"] == [layer, x] or connection["to"] == [layer, x]:
                                 del new_neural_network["connections"][y]
+                                
                             elif connection["from"][0] == layer:
-                                try:
-                                    if connection["from"][1] > x:
-                                        connection["from"][1] -= 1
-                                except TypeError:
-                                    print("Type Error line 307 approx")
-                                    print(new_neural_network)
-                                    quit()
+                                if connection["from"][1] > x:
+                                    connection["from"][1] -= 1
                                     
                             elif connection["to"][0] == layer:
                                 if connection["to"][1] > x:
@@ -334,7 +336,7 @@ def breed(fitnesses, config_parameters):
                             
                             # Get a random layer and node number
                             random_layer = random.choice(layers_list)
-                            random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1-x_counter)
+                            random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
                             
                             # Create and add the new connection
                             new_connection = {
@@ -354,10 +356,6 @@ def breed(fitnesses, config_parameters):
     
     # Replace the old Neural Networks with the new ones
     neural_networks = copy.deepcopy(new_neural_networks)
-        
-        
-
-
 
 
 def train(config_parameters):

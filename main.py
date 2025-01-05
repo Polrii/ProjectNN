@@ -137,11 +137,13 @@ def log(current_iteration):
     total_runtime_h = int(total_runtime // 3600)
     total_runtime_min = int((total_runtime % 3600) // 60)
     total_runtime_s = int(total_runtime % 60)
+    total_runtime_ms = int((total_runtime % 1) * 1000)
 
     # Format the time since the last log
     time_since_last_log_h = int(time_since_last_log // 3600)
     time_since_last_log_min = int((time_since_last_log % 3600) // 60)
     time_since_last_log_s = int(time_since_last_log % 60)
+    time_since_last_log_ms = int((time_since_last_log % 1) * 1000)
 
     best_fitness = max([neural_network["fitness"] for neural_network in neural_networks])
     average_fitness = sum([neural_network["fitness"] for neural_network in neural_networks]) / len(neural_networks)
@@ -160,14 +162,14 @@ def log(current_iteration):
     print(f"""
     \n\nGeneration: {current_iteration}
     ==================================================
-    Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s
+    Generation time: {time_since_last_log_h}h {time_since_last_log_min}min {time_since_last_log_s}s {time_since_last_log_ms}ms
     Fitness:
            |              Actual              Increase
     --------------------------------------------------
     Best   |{best_fitness:>20.2f}  {best_increase:>20.2f}
     Average|{average_fitness:>20.2f}  {average_increase:>20.2f}
     Worst  |{worst_fitness:>20.2f}  {worst_increase:>20.2f}
-    Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s
+    Total runtime: {total_runtime_h}h {total_runtime_min}min {total_runtime_s}s {total_runtime_ms}ms
     """)
 
     
@@ -423,8 +425,6 @@ def run():
     with open('config.json') as config_file:
         config_parameters = json.load(config_file)
     populate(config_parameters)
-    
-    print(neural_networks)
     
     train(config_parameters)
 

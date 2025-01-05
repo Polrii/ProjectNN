@@ -189,6 +189,14 @@ def breed(fitnesses, config_parameters):
     new_neural_networks.append(neural_networks[0])
     new_neural_networks.append(neural_networks[1])
     
+    # Calculate the average fitness
+    average_fitness = sum([neural_network["fitness"] for neural_network in neural_networks]) / len(neural_networks)
+    # Count the number of Neural Networks with a fitness above or equal to the average
+    above_average = len([neural_network for neural_network in neural_networks if neural_network["fitness"] >= average_fitness])
+    # Calculate the species proportion
+    graph_species = above_average*(above_average+1)/2
+    proportion = (population_number-2) / graph_species
+    
     
     # Load config parameters for faster access
     max_bias = config_parameters["inputs_&_outputs"]["max_bias"]
@@ -206,130 +214,76 @@ def breed(fitnesses, config_parameters):
     remove_layer = config_parameters["mutation_probabilities"]["remove_layer"]
     
     
-    # Create random variations of other Neural Networks
-    while len(new_neural_networks) < population_number:
+    # Create mutations for the above average Neural Networks according to the proportion
+    counter = 1
+    for nn in reversed(neural_networks[:above_average]):
         
-        # Select a random Neural Network
-        neural_network = copy.deepcopy(random.choice(neural_networks))
-        # Create a new Neural Network with the same input layer and probability randomized output layer
-        new_neural_network = {
-            "nodes": {
-                "input_layer": neural_network["nodes"]["input_layer"],
-                "output_layer": [random.uniform(min_bias, max_bias) if random.random() < modify_bias else output_node for output_node in neural_network["nodes"]["output_layer"]]
-            },
-            "connections": []
-        }
-        
-        # Iterate through the connections
-        for connection in neural_network["connections"]:
-            if not random.random() < remove_connection:
-                # The connection is not removed (we keep it)
-                new_neural_network["connections"].append(connection)
-            elif random.random() < modify_weight:
-                # The connection is modified (we change the weight)
-                new_connection = connection
-                new_connection["weight"] = random.uniform(min_weight, max_weight)
-                new_neural_network["connections"].append(new_connection)
-
-        
-        # Iterate through the layers
-        for layer in neural_network["nodes"]:
-            # Work only on the hidden layers
-            if layer != "input_layer" and layer != "output_layer":
-                # Check if we keep the layer
-                if not random.random() < remove_layer:
-                    new_neural_network["nodes"][layer] = neural_network["nodes"][layer]
-                    # Add node if probability says so
-                    if random.random() < add_node:
-                        new_neural_network["nodes"][layer].append(random.uniform(min_bias, max_bias))
-                # If we remove the layer, we remove the connections
-                else:
-                    for x, connection in enumerate(new_neural_network["connections"]):
-                        if connection["from"][0] == layer or connection["to"][0] == layer:
-                            del new_neural_network["connections"][x]
+        # Best Neural Network -> Create as many mutations as space left in the population
+        if counter == above_average:
+            iterations = population_number - len(new_neural_networks)
+        else:
+            iterations = int(proportion * counter)
         
         
-        # Check if we add layer
-        if random.random() < add_layer:
-            layer_counter = 1
-            while True:
-                new_layer_name = f"layer_{layer_counter}"
-                if new_layer_name not in new_neural_network["nodes"]:
-                    new_neural_network["nodes"][new_layer_name] = [random.uniform(min_bias, max_bias)]
-                    break
-                layer_counter += 1
-
-        
-        # Iterate through the nodes
-        for layer in new_neural_network["nodes"]:
-            # Input layer -> add connection
-            if layer == "input_layer":
-                for x, node in enumerate(new_neural_network["nodes"][layer]):
-                    # Add a connection
-                    if random.random() < add_connection:
-                        # Get a list of the layers and remove the input layer
-                        layers_list = list(new_neural_network["nodes"].keys())
-                        layers_list.remove(layer)
-                        
-                        # Get a random layer and node number
-                        random_layer = random.choice(layers_list)
-                        random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
-                        
-                        # Create and add the new connection
-                        new_connection = {
-                            "from": ["input_layer", x],
-                            "to": [random_layer, random_node],
-                            "weight": random.uniform(min_weight, max_weight)
-                        }
-                        new_neural_network["connections"].append(new_connection)
+        # Create as many mutations as the proportion says
+        for i in range(iterations):
+            # Get a copy of the Neural Network to avoid connections
+            neural_network = copy.deepcopy(nn)
+            # Create a new Neural Network with the same input layer and probability randomized output layer
+            new_neural_network = {
+                "nodes": {
+                    "input_layer": neural_network["nodes"]["input_layer"],
+                    "output_layer": [random.uniform(min_bias, max_bias) if random.random() < modify_bias else output_node for output_node in neural_network["nodes"]["output_layer"]]
+                },
+                "connections": []
+            }
             
-            # Output layer -> add connection, modify bias
-            elif layer == "output_layer":
-                for x, node in enumerate(new_neural_network["nodes"][layer]):
-                    # Add a connection
-                    if random.random() < add_connection:
-                        # Get a list of the layers and remove the input layer
-                        layers_list = list(new_neural_network["nodes"].keys())
-                        layers_list.remove(layer)
-                        
-                        # Get a random layer and node number
-                        random_layer = random.choice(layers_list)
-                        random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
-                        
-                        # Create and add the new connection
-                        new_connection = {
-                            "from": [random_layer, random_node],
-                            "to": ["output_layer", x],
-                            "weight": random.uniform(min_weight, max_weight)
-                        }
-                        new_neural_network["connections"].append(new_connection)
-                    
-                    # Modify bias
-                    if random.random() < modify_bias:
-                        new_neural_network["nodes"][layer][x] = random.uniform(min_bias, max_bias)
-            
-            # Other layers -> add connection, modify bias, remove nodes
-            else:
-                for x, node in enumerate(new_neural_network["nodes"][layer]):
-                    # Remove node
-                    if random.random() < remove_node:
-                        del new_neural_network["nodes"][layer][x]
-                        
-                        # Remove connections to that node and modify the references
-                        for y, connection in enumerate(new_neural_network["connections"]):
-                            if connection["from"] == [layer, x] or connection["to"] == [layer, x]:
-                                del new_neural_network["connections"][y]
-                                
-                            elif connection["from"][0] == layer:
-                                if connection["from"][1] > x:
-                                    connection["from"][1] -= 1
-                                    
-                            elif connection["to"][0] == layer:
-                                if connection["to"][1] > x:
-                                    connection["to"][1] -= 1
+        
+            # Iterate through the connections
+            for connection in neural_network["connections"]:
+                if not random.random() < remove_connection:
+                    # The connection is not removed (we keep it)
+                    new_neural_network["connections"].append(connection)
+                elif random.random() < modify_weight:
+                    # The connection is modified (we change the weight)
+                    new_connection = connection
+                    new_connection["weight"] = random.uniform(min_weight, max_weight)
+                    new_neural_network["connections"].append(new_connection)
 
-                        
-                    else: 
+            
+            # Iterate through the layers
+            for layer in neural_network["nodes"]:
+                # Work only on the hidden layers
+                if layer != "input_layer" and layer != "output_layer":
+                    # Check if we keep the layer
+                    if not random.random() < remove_layer:
+                        new_neural_network["nodes"][layer] = neural_network["nodes"][layer]
+                        # Add node if probability says so
+                        if random.random() < add_node:
+                            new_neural_network["nodes"][layer].append(random.uniform(min_bias, max_bias))
+                    # If we remove the layer, we remove the connections
+                    else:
+                        for x, connection in enumerate(new_neural_network["connections"]):
+                            if connection["from"][0] == layer or connection["to"][0] == layer:
+                                del new_neural_network["connections"][x]
+            
+            
+            # Check if we add layer
+            if random.random() < add_layer:
+                layer_counter = 1
+                while True:
+                    new_layer_name = f"layer_{layer_counter}"
+                    if new_layer_name not in new_neural_network["nodes"]:
+                        new_neural_network["nodes"][new_layer_name] = [random.uniform(min_bias, max_bias)]
+                        break
+                    layer_counter += 1
+
+            
+            # Iterate through the nodes
+            for layer in new_neural_network["nodes"]:
+                # Input layer -> add connection
+                if layer == "input_layer":
+                    for x, node in enumerate(new_neural_network["nodes"][layer]):
                         # Add a connection
                         if random.random() < add_connection:
                             # Get a list of the layers and remove the input layer
@@ -342,8 +296,29 @@ def breed(fitnesses, config_parameters):
                             
                             # Create and add the new connection
                             new_connection = {
-                                "from": [layer, x] if layer < random_layer else [random_layer, random_node],
-                                "to": [layer, x] if layer > random_layer else [random_layer, random_node],
+                                "from": ["input_layer", x],
+                                "to": [random_layer, random_node],
+                                "weight": random.uniform(min_weight, max_weight)
+                            }
+                            new_neural_network["connections"].append(new_connection)
+                
+                # Output layer -> add connection, modify bias
+                elif layer == "output_layer":
+                    for x, node in enumerate(new_neural_network["nodes"][layer]):
+                        # Add a connection
+                        if random.random() < add_connection:
+                            # Get a list of the layers and remove the input layer
+                            layers_list = list(new_neural_network["nodes"].keys())
+                            layers_list.remove(layer)
+                            
+                            # Get a random layer and node number
+                            random_layer = random.choice(layers_list)
+                            random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
+                            
+                            # Create and add the new connection
+                            new_connection = {
+                                "from": [random_layer, random_node],
+                                "to": ["output_layer", x],
                                 "weight": random.uniform(min_weight, max_weight)
                             }
                             new_neural_network["connections"].append(new_connection)
@@ -351,10 +326,60 @@ def breed(fitnesses, config_parameters):
                         # Modify bias
                         if random.random() < modify_bias:
                             new_neural_network["nodes"][layer][x] = random.uniform(min_bias, max_bias)
-                    
+                
+                # Other layers -> add connection, modify bias, remove nodes
+                else:
+                    for x, node in enumerate(new_neural_network["nodes"][layer]):
+                        # Remove node
+                        if random.random() < remove_node:
+                            del new_neural_network["nodes"][layer][x]
+                            if len(new_neural_network["nodes"][layer]) == 0:
+                                del new_neural_network["nodes"][layer]
+                            
+                            # Remove connections to that node and modify the references
+                            for y, connection in enumerate(new_neural_network["connections"]):
+                                if connection["from"] == [layer, x] or connection["to"] == [layer, x]:
+                                    del new_neural_network["connections"][y]
+                                    
+                                elif connection["from"][0] == layer:
+                                    if connection["from"][1] > x:
+                                        connection["from"][1] -= 1
+                                        
+                                elif connection["to"][0] == layer:
+                                    if connection["to"][1] > x:
+                                        connection["to"][1] -= 1
 
-        # Add the newly created Neural Network to the list
-        new_neural_networks.append(new_neural_network)
+                            
+                        else: 
+                            # Add a connection
+                            if random.random() < add_connection:
+                                # Get a list of the layers and remove the input layer
+                                layers_list = list(new_neural_network["nodes"].keys())
+                                layers_list.remove(layer)
+                                
+                                # Get a random layer and node number
+                                random_layer = random.choice(layers_list)
+                                random_node = random.randint(0, len(new_neural_network["nodes"][random_layer])-1)
+                                
+                                # Create and add the new connection
+                                new_connection = {
+                                    "from": [layer, x] if layer < random_layer else [random_layer, random_node],
+                                    "to": [layer, x] if layer > random_layer else [random_layer, random_node],
+                                    "weight": random.uniform(min_weight, max_weight)
+                                }
+                                new_neural_network["connections"].append(new_connection)
+                            
+                            # Modify bias
+                            if random.random() < modify_bias:
+                                new_neural_network["nodes"][layer][x] = random.uniform(min_bias, max_bias)
+                        
+
+            # Add the newly created Neural Network to the list
+            new_neural_networks.append(new_neural_network)
+            
+            
+        counter += 1
+        
     
     # Replace the old Neural Networks with the new ones
     neural_networks = copy.deepcopy(new_neural_networks)
